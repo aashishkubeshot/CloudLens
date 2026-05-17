@@ -225,9 +225,21 @@ the project hash, so it's obvious if it's pointing at the wrong project.
 ## Local viewer
 
 `cloudlens-watch` is a terminal UI over the same `Observability` clients the
-MCP server uses — no extra setup beyond `pip install -e .`.
+MCP server uses.
+
+**Quick start** — `start.sh` creates a venv, installs the package, and launches
+the TUI in your terminal:
 
 ```sh
+cp .env.example .env       # then set GOOGLE_CLOUD_PROJECT
+./start.sh                 # tail every Cloud Run service
+./start.sh -s api,worker   # extra args pass through to cloudlens-watch
+```
+
+**Manual** — if you'd rather manage the env yourself:
+
+```sh
+pip install -e .
 cloudlens-watch                              # tail every Cloud Run service
 cloudlens-watch -s api,worker                # tail two services
 cloudlens-watch -s api --hours 4             # 4h lookback, single service
