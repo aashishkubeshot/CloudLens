@@ -11,10 +11,12 @@ dependencies = [
     "google-cloud-monitoring>=2.19.0",
     "google-cloud-trace>=1.13.0",
     "google-cloud-error-reporting>=1.10.0",
+    "textual>=0.60",
 ]
 
 [project.scripts]
 cloudlens = "cloudlens.server:main"
+cloudlens-watch = "cloudlens.tui:main"
 
 [build-system]
 requires = ["hatchling"]

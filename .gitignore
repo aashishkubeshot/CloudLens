@@ -4,7 +4,7 @@ __pycache__/
 *$py.class
 *.so
 .Python
-
+.claude/
 # Virtual environments
 .venv/
 venv/
@@ -22,6 +22,7 @@ wheels/
 # Environment / secrets
 .env
 .env.*
+!.env.example
 *.pem
 *.key
 service-account*.json
@@ -48,3 +49,9 @@ htmlcov/
 .tox/
 .mypy_cache/
 .ruff_cache/
+
+# Go build artifacts
+watch/cloudlens-watch
+watch/*.test
+
+

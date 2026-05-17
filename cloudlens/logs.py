@@ -122,6 +122,7 @@ def build_filter(
     severity: str | None = None,
     text: str | None = None,
     trace_id: str | None = None,
+    extras: list[str] | None = None,
     exclude_noise: bool = False,
 ) -> str:
     parts = ['resource.type="cloud_run_revision"']
@@ -151,6 +152,11 @@ def build_filter(
     if trace_id:
         tid = trace_id.split("/")[-1]
         parts.append(f'trace="projects/{project}/traces/{tid}"')
+    if extras:
+        # Free-form fragments contributed by the TUI's filter framework
+        # (filters.py). Each one is already a complete Cloud Logging
+        # predicate; we just AND it into the query.
+        parts.extend(c for c in extras if c)
     if exclude_noise:
         parts.extend(_NOISE_EXCLUDES)
     return " AND ".join(parts)

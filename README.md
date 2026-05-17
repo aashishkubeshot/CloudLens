@@ -12,6 +12,14 @@ request-correlated views — so the agent can actually answer *"is this service
 healthy?"*, *"what changed since the deploy?"*, and *"why did this request
 fail?"*.
 
+CloudLens also ships a **terminal viewer** (`cloudlens-watch`) — a TUI for
+tailing, searching, and trace-stitching Cloud Run logs across one, many, or
+all services without leaving the terminal. See [Local viewer](#local-viewer).
+
+A second viewer is being written in Go (Bubble Tea + Lip Gloss) for
+single-binary distribution and streaming-RPC tail — see [`watch/`](watch/)
+for the work-in-progress build.
+
 ## What you get
 
 ### Health & metrics
@@ -213,6 +221,58 @@ claude mcp get cloudlens     # check env.GOOGLE_CLOUD_PROJECT
 
 Or have the agent call `list_services()` — the returned `uri` fields embed
 the project hash, so it's obvious if it's pointing at the wrong project.
+
+## Local viewer
+
+`cloudlens-watch` is a terminal UI over the same `Observability` clients the
+MCP server uses — no extra setup beyond `pip install -e .`.
+
+```sh
+cloudlens-watch                              # tail every Cloud Run service
+cloudlens-watch -s api,worker                # tail two services
+cloudlens-watch -s api --hours 4             # 4h lookback, single service
+GOOGLE_CLOUD_PROJECT=my-proj cloudlens-watch # explicit project
+```
+
+Multi-service queries are a single OR'd Cloud Logging filter — entries come
+back interleaved and timestamp-ordered. Each row is colored by `svc` (stable
+hash), so handoffs across services stand out visually.
+
+The viewer has three modes shown in the status bar:
+
+- **● LIVE** — polling tail every 2s
+- **⏸ PAUSED** — buffer frozen, no polling
+- **🔍 SEARCH** — server-side query results, polling stopped
+
+**Keybinds**
+
+| key | action |
+|-----|--------|
+| `enter` | open detail view for the selected row |
+| `c` | context — focus on this row's service, ±25 entries around it |
+| `t` | trace drill-down for the selected row — cross-service stitch |
+| `/` | search Cloud Logging (server-side, scoped to current service selection) |
+| `s` | service picker (`space` toggle · `a` all · `n` none · `enter` apply) |
+| `space` | pause / resume live polling |
+| `esc` | return to live mode (closes search input or exits search results) |
+| `q` | quit |
+
+`c` (context), `t` (trace), and `enter` (details) work from inside the trace
+and context views too, so you can drill recursively: search → context →
+trace → context elsewhere → back back back.
+
+The `trc` column shows `●` for rows that carry a `trace_id` (drillable with
+`t`) and `·` for rows without one — Cloud Run only attaches trace IDs to
+entries logged inside an HTTP request context, so background/startup logs
+won't have them.
+
+**Trace drill-down** calls `get_logs_by_trace` with no service filter, so it
+stitches every entry for that trace across the project — even services not
+in your current selection.
+
+**Search scope** follows the active service selection: search "all services"
+by default, or `s` first to narrow to one. Default lookback is 24h, capped
+at 300 results.
 
 ## Notes
 

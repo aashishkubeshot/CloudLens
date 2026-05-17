@@ -42,6 +42,17 @@ def format_entry(e: Any) -> dict:
         rev = e.resource.labels.get("revision_name")
         if rev:
             out["rev"] = rev
+    # Cloud Run instance ID: lets users spot instance churn (cold starts,
+    # autoscaling, OOM kills). For HTTP/system logs it sits in entry-level
+    # `labels.instanceId` (camelCase); some log paths emit `instance_id` on
+    # the resource. Check both.
+    inst = None
+    if getattr(e, "labels", None):
+        inst = e.labels.get("instanceId") or e.labels.get("instance_id")
+    if not inst and getattr(e, "resource", None) and getattr(e.resource, "labels", None):
+        inst = e.resource.labels.get("instance_id")
+    if inst:
+        out["inst"] = inst
     return out
 
 
